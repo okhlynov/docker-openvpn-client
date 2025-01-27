@@ -1,54 +1,22 @@
-# Dockerized OpenVPN Client with Squid Proxy
-
-This project was forked from [`ghcr.io/wfg/openvpn-client`](https://github.com/users/wfg/packages/container/package/openvpn-client) a containerized OpenVPN client.
+# Squid Proxy with OpenVPN
 
 ## Overview
-This project provides a Dockerized OpenVPN client with a Squid proxy server. It allows you to route your traffic through a VPN for added privacy and security.
+This project sets up a Squid proxy server that routes traffic through an OpenVPN client. It allows you to route your traffic through a VPN for added privacy and security.
 
 ## Prerequisites
 - Docker
 - Docker Compose
 
-## Building the Containers
 
-### Squid Proxy Container
+2. Place your OpenVPN configuration file (`client.ovpn`) in the `$project_root/local` directory in 
 
-1. Navigate to the directory containing the Dockerfile for Squid:
+3. Build and start the services:
     ```sh
-    cd squid-build
-    ```
-
-2. Build the Squid Docker image:
-    ```sh
-    docker build -t squid:latest .
-    ```
-
-### OpenVPN Client Container
-
-1. Navigate to the directory containing the Dockerfile for OpenVPN:
-    ```sh
-    cd ovpn-build
-    ```
-
-2. Build the OpenVPN Docker image:
-    ```sh
-    docker build -t openvpn-client:latest .
-    ```
-
-### Starting the Services
-
-1. Navigate to the directory containing your docker-compose.yml:
-    ```sh
-    cd proxy
-    ```
-2. Place to the `proxy/local` `client.ovpn` file with vpn creds.
-
-3. Start the services using Docker Compose:
-    ```sh
+    cd $project_root/proxy
     docker-compose up -d
     ```
 
-### Verifying the Setup
+## Usage
 
 1. Set your proxy settings to `http://localhost:3128`.
 
@@ -57,7 +25,20 @@ This project provides a Dockerized OpenVPN client with a Squid proxy server. It 
     curl --proxy http://localhost:3128 http://ifconfig.co
     ```
 
-### Stopping the Services
+## Troubleshooting
+
+- Check the logs for the OpenVPN client and Squid:
+    ```sh
+    docker logs openvpn-client
+    docker logs squid
+    ```
+
+- Ensure DNS resolution works inside the OpenVPN container:
+    ```sh
+    docker exec -it openvpn-client ping ifconfig.co
+    ```
+
+## Stopping the Services
 
 To stop the services, run:
 ```sh
