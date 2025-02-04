@@ -21,3 +21,4 @@ services:
     image: squid:latest
     container_name: squid
     network_mode: service:openvpn-client
+    restart: unless-stopped
