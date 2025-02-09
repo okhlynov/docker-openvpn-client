@@ -6,21 +6,19 @@ This project sets up a Squid proxy server that routes traffic through an OpenVPN
 ## Prerequisites
 - Docker
 - Docker Compose
-
-
-2. Place your OpenVPN configuration file (`client.ovpn`) in the `$project_root/local` directory in 
-
-3. Build and start the services:
-    ```sh
-    cd $project_root/proxy
-    docker-compose up -d
-    ```
+- An OpenVPN configuration file (`client.ovpn`) should be in the `$project_root/local` directory. 
 
 ## Usage
 
-1. Set your proxy settings to `http://localhost:3128`.
+1. Build and start the services:
+    ```sh
+    docker compose build   
+    docker compose up -d
+    ```
 
-2. Verify the proxy is working:
+2. Set your proxy settings to `http://localhost:3128`.
+
+3. Verify the proxy is working:
     ```sh
     curl --proxy http://localhost:3128 http://ifconfig.co
     ```
@@ -41,6 +39,6 @@ This project sets up a Squid proxy server that routes traffic through an OpenVPN
 ## Stopping the Services
 
 To stop the services, run:
-```sh
-docker-compose down
-```
+    ```sh
+    docker compose down
+    ```
