@@ -17,15 +17,8 @@ services:
       - 8.8.8.8
       - 1.1.1.1
     restart: unless-stopped
-    networks:
-      - shared-network
-
   squid:
     image: squid:latest
     container_name: squid
     network_mode: service:openvpn-client
     restart: unless-stopped
-
-networks:
-  shared-network:
-    name: shared-network
