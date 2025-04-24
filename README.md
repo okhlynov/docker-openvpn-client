@@ -6,25 +6,28 @@ This project sets up a Squid proxy server that routes traffic through an OpenVPN
 ## Prerequisites
 - Docker
 - Docker Compose
-
-
-2. Place your OpenVPN configuration file (`client.ovpn`) in the `$project_root/local` directory.
-
-3. Build and start the services:
-    ```sh
-    cd $project_root/proxy
-    docker-compose up -d
-    ```
-
-    **Note:** The `CONFIG_FILE` environment variable specifies the OpenVPN configuration file to use (e.g., `client.ovpn`). If this variable is not set, the container will automatically select a random `.conf` or `.ovpn` file from the `/config` directory using the following command:
-    ```sh
-    config_file=$(find /config -name '*.conf' -o -name '*.ovpn' 2> /dev/null | sort | shuf -n 1)
-    ```
+- An OpenVPN configuration file (`client.ovpn`) should be in the `$project_root/local` directory. 
 
 ## Usage
 
-1. Set your proxy settings to `http://localhost:3128`.
 
+1. Place your OpenVPN configuration file (`client.ovpn`) in the `$project_root/local` directory.
+ **Note:** The `CONFIG_FILE` environment variable specifies the OpenVPN configuration file to use (e.g., `client.ovpn`). If this variable is not set, the container will automatically select a random `.conf` or `.ovpn` file from the `/config` directory using the following command:
+    ```sh
+    config_file=$(find /config -name '*.conf' -o -name '*.ovpn' 2> /dev/null | sort | shuf -n 1)
+    ```
+    To unser this variable edit the docker-compose.yaml
+    
+2. Build and start the services:
+    ```sh
+    docker compose build   
+    docker compose up -d
+    ```
+
+   
+
+## Usage
+1. Set your proxy settings to `http://localhost:3128`.
 2. Verify the proxy is working:
     ```sh
     curl --proxy http://localhost:3128 http://ifconfig.co
@@ -38,7 +41,7 @@ This project sets up a Squid proxy server that routes traffic through an OpenVPN
     docker logs squid
     ```
 
-    use flag -f to monitor logs like this `docker logs -f openvpn-client`
+use flag -f to monitor logs like this `docker logs -f openvpn-client`
 
 
 - Ensure DNS resolution works inside the OpenVPN container:
@@ -49,6 +52,6 @@ This project sets up a Squid proxy server that routes traffic through an OpenVPN
 ## Stopping the Services
 
 To stop the services, run:
-```sh
-docker-compose down
-```
+    ```sh
+    docker compose down
+    ```
