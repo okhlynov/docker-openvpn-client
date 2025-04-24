@@ -8,12 +8,17 @@ This project sets up a Squid proxy server that routes traffic through an OpenVPN
 - Docker Compose
 
 
-2. Place your OpenVPN configuration file (`client.ovpn`) in the `$project_root/local` directory in 
+2. Place your OpenVPN configuration file (`client.ovpn`) in the `$project_root/local` directory.
 
 3. Build and start the services:
     ```sh
     cd $project_root/proxy
     docker-compose up -d
+    ```
+
+    **Note:** The `CONFIG_FILE` environment variable specifies the OpenVPN configuration file to use (e.g., `client.ovpn`). If this variable is not set, the container will automatically select a random `.conf` or `.ovpn` file from the `/config` directory using the following command:
+    ```sh
+    config_file=$(find /config -name '*.conf' -o -name '*.ovpn' 2> /dev/null | sort | shuf -n 1)
     ```
 
 ## Usage
@@ -32,6 +37,9 @@ This project sets up a Squid proxy server that routes traffic through an OpenVPN
     docker logs openvpn-client
     docker logs squid
     ```
+
+    use flag -f to monitor logs like this `docker logs -f openvpn-client`
+
 
 - Ensure DNS resolution works inside the OpenVPN container:
     ```sh

@@ -1,6 +1,6 @@
 services:
   openvpn-client:
-    image: openvpn-client:latest
+    image: openvpn-client-replaced:latest
     container_name: openvpn-client
     cap_add:
       - NET_ADMIN
