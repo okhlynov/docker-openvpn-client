@@ -41,8 +41,10 @@ fi
 if [[ -n ${AUTH_SECRET:-} ]]; then
     openvpn_args+=("--auth-user-pass" "/run/secrets/$AUTH_SECRET")
 fi
+# use custom openvpn client here 
+/usr/local/bin/openvpn --version
 
-openvpn "${openvpn_args[@]}" &
+/usr/local/bin/openvpn "${openvpn_args[@]}" &
 openvpn_pid=$!
 
 trap cleanup TERM

@@ -1,10 +1,7 @@
 services:
   openvpn-client:
-    image: openvpn-client-replaced:latest
+    image: openvpn-client:latest
     container_name: openvpn-client
-    build:
-      dockerfile: Dockerfile
-      context: ovpn-build
     cap_add:
       - NET_ADMIN
     devices:
@@ -20,19 +17,8 @@ services:
       - 8.8.8.8
       - 1.1.1.1
     restart: unless-stopped
-    networks:
-      - shared-network
-
   squid:
-    image: squid:1.0
+    image: squid:latest
     container_name: squid
     network_mode: service:openvpn-client
-    build:
-      dockerfile: Dockerfile
-      context: squid-build
     restart: unless-stopped
-
-networks:
-  shared-network:
-    name: shared-network
-    
