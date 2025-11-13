@@ -1,0 +1,3 @@
+[submodule "docker-amneziawg"]
+	path = docker-amneziawg
+	url = git@github.com:AYastrebov/docker-amneziawg.git
