@@ -1,33 +1,38 @@
-# Squid Proxy with OpenVPN
+# Squid Proxy with AmneziaWG
 
 ## Overview
-This project sets up a Squid proxy server that routes traffic through an OpenVPN client. It allows you to route your traffic through a VPN for added privacy and security.
+This project sets up a Squid proxy server that routes traffic through an AmneziaWG VPN client. AmneziaWG is a WireGuard-based VPN protocol with built-in obfuscation capabilities designed to bypass Deep Packet Inspection (DPI) and censorship while maintaining WireGuard's performance and security benefits.
+
+The architecture uses two Docker containers:
+- **AmneziaWG client** (`awg-client`) - Establishes the VPN tunnel
+- **Squid proxy** - Shares the VPN client's network namespace, routing all proxy traffic through the VPN
 
 ## Prerequisites
 - Docker
 - Docker Compose
-- An OpenVPN configuration file (`client.ovpn`) should be in the `$project_root/local` directory. 
+- An AmneziaWG configuration file (`awg0.conf`) in the `$project_root/local` directory
 
-## Usage
+## Setup
 
-
-1. Place your OpenVPN configuration file (`client.ovpn`) in the `$project_root/local` directory.
- **Note:** The `CONFIG_FILE` environment variable specifies the OpenVPN configuration file to use (e.g., `client.ovpn`). If this variable is not set, the container will automatically select a random `.conf` or `.ovpn` file from the `/config` directory using the following command:
+1. Initialize the git submodule (required for AmneziaWG client):
     ```sh
-    config_file=$(find /config -name '*.conf' -o -name '*.ovpn' 2> /dev/null | sort | shuf -n 1)
+    git submodule update --init --recursive
     ```
-    To unser this variable edit the docker-compose.yaml
-    
-2. Build and start the services:
+
+2. Place your AmneziaWG configuration file as `awg0.conf` in the `$project_root/local` directory.
+
+   For detailed information about AmneziaWG configuration and obfuscation parameters, see the [AmneziaWG submodule documentation](./docker-amneziawg/README.md).
+
+3. Build and start the services:
     ```sh
-    docker compose build   
+    docker compose build
     docker compose up -d
     ```
 
-   
-
 ## Usage
+
 1. Set your proxy settings to `http://localhost:3128`.
+
 2. Verify the proxy is working:
     ```sh
     curl --proxy http://localhost:3128 http://ifconfig.co
@@ -35,23 +40,42 @@ This project sets up a Squid proxy server that routes traffic through an OpenVPN
 
 ## Troubleshooting
 
-- Check the logs for the OpenVPN client and Squid:
+- Check the logs for the AmneziaWG client and Squid:
     ```sh
-    docker logs openvpn-client
+    docker logs awg-client
     docker logs squid
     ```
 
-use flag -f to monitor logs like this `docker logs -f openvpn-client`
+  Use the `-f` flag to monitor logs in real-time: `docker logs -f awg-client`
 
-
-- Ensure DNS resolution works inside the OpenVPN container:
+- Check VPN connection status:
     ```sh
-    docker exec -it openvpn-client ping ifconfig.co
+    docker exec -it awg-client awg show
+    ```
+
+- Check VPN interface details:
+    ```sh
+    docker exec -it awg-client awg show awg0
+    ```
+
+- Verify DNS resolution inside the VPN container:
+    ```sh
+    docker exec -it awg-client ping ifconfig.co
+    ```
+
+- Check container health status:
+    ```sh
+    docker compose ps
     ```
 
 ## Stopping the Services
 
 To stop the services, run:
-    ```sh
-    docker compose down
-    ```
+```sh
+docker compose down
+```
+
+## Additional Resources
+
+- [AmneziaWG Docker Implementation](./docker-amneziawg/README.md) - Detailed documentation for the VPN client container
+- [AmneziaWG Protocol](https://github.com/amnezia-vpn/amnezia-client) - Official AmneziaWG project
