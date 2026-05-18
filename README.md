@@ -4,13 +4,13 @@
 This project sets up a Squid proxy server that routes traffic through an AmneziaWG VPN client. AmneziaWG is a WireGuard-based VPN protocol with built-in obfuscation capabilities designed to bypass Deep Packet Inspection (DPI) and censorship while maintaining WireGuard's performance and security benefits.
 
 The architecture uses two Docker containers:
-- **AmneziaWG client** (`awg-client`) - Establishes the VPN tunnel
+- **AmneziaWG client** (`amneziawg`) - Establishes the VPN tunnel
 - **Squid proxy** - Shares the VPN client's network namespace, routing all proxy traffic through the VPN
 
 ## Prerequisites
 - Docker
 - Docker Compose
-- An AmneziaWG configuration file (`awg0.conf`) in the `$project_root/local` directory
+- An AmneziaWG configuration file at `$project_root/local/wg_confs/awg0.conf`
 
 ## Setup
 
@@ -19,7 +19,7 @@ The architecture uses two Docker containers:
     git submodule update --init --recursive
     ```
 
-2. Place your AmneziaWG configuration file as `awg0.conf` in the `$project_root/local` directory.
+2. Place your AmneziaWG configuration file as `awg0.conf` in the `$project_root/local/wg_confs` directory.
 
    For detailed information about AmneziaWG configuration and obfuscation parameters, see the [AmneziaWG submodule documentation](./docker-amneziawg/README.md).
 
@@ -42,25 +42,25 @@ The architecture uses two Docker containers:
 
 - Check the logs for the AmneziaWG client and Squid:
     ```sh
-    docker logs awg-client
+    docker logs amneziawg
     docker logs squid
     ```
 
-  Use the `-f` flag to monitor logs in real-time: `docker logs -f awg-client`
+  Use the `-f` flag to monitor logs in real-time: `docker logs -f amneziawg`
 
 - Check VPN connection status:
     ```sh
-    docker exec -it awg-client awg show
+    docker exec -it amneziawg awg show
     ```
 
 - Check VPN interface details:
     ```sh
-    docker exec -it awg-client awg show awg0
+    docker exec -it amneziawg awg show awg0
     ```
 
 - Verify DNS resolution inside the VPN container:
     ```sh
-    docker exec -it awg-client ping ifconfig.co
+    docker exec -it amneziawg ping ifconfig.co
     ```
 
 - Check container health status:

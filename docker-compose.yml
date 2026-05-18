@@ -15,8 +15,8 @@ services:
       - net.ipv4.conf.all.src_valid_mark=1
       - net.ipv6.conf.all.disable_ipv6=0
     volumes:
-      # Mount your local WireGuard configuration file
-      - ./local/awg0.conf:/etc/wireguard/awg0.conf
+      # Mount local configuration directory (image scans /config/wg_confs/*.conf)
+      - ./local:/config
     ports:
       - "3128:3128"
     dns:
@@ -30,8 +30,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-    # The command to run inside the container, specifying the interface name
-    command: awg0
     networks:
       - shared-network
 
