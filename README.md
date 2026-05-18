@@ -4,13 +4,13 @@
 This project sets up a Squid proxy server that routes traffic through an AmneziaWG VPN client. AmneziaWG is a WireGuard-based VPN protocol with built-in obfuscation capabilities designed to bypass Deep Packet Inspection (DPI) and censorship while maintaining WireGuard's performance and security benefits.
 
 The architecture uses two Docker containers:
-- **AmneziaWG client** (`awg-client`) - Establishes the VPN tunnel
+- **AmneziaWG client** (`amneziawg`) - Establishes the VPN tunnel
 - **Squid proxy** - Shares the VPN client's network namespace, routing all proxy traffic through the VPN
 
 ## Prerequisites
 - Docker
 - Docker Compose
-- An AmneziaWG configuration file (`awg0.conf`) in the `$project_root/local` directory
+- An AmneziaWG configuration directory in `$project_root/local`, with config at `$project_root/local/wg_confs/awg0.conf`
 
 ## Setup
 
@@ -19,7 +19,7 @@ The architecture uses two Docker containers:
     git submodule update --init --recursive
     ```
 
-2. Place your AmneziaWG configuration file as `awg0.conf` in the `$project_root/local` directory.
+2. Place your AmneziaWG configuration file as `$project_root/local/wg_confs/awg0.conf`.
 
    For detailed information about AmneziaWG configuration and obfuscation parameters, see the [AmneziaWG submodule documentation](./docker-amneziawg/README.md).
 
@@ -28,6 +28,14 @@ The architecture uses two Docker containers:
     docker compose build
     docker compose up -d
     ```
+
+4. (Optional) Use the Makefile wrapper for Docker Compose compatibility fallback:
+    ```sh
+    make build
+    make up
+    ```
+   The wrapper first tries `docker compose` and automatically falls back to `docker-compose` if your local plugin path fails (for example with `unknown flag: --allow`).
+
 
 ## Usage
 
@@ -38,29 +46,34 @@ The architecture uses two Docker containers:
     curl --proxy http://localhost:3128 http://ifconfig.co
     ```
 
+3. Verify proxy egress geolocation (country/city/ASN):
+    ```sh
+    curl --proxy http://localhost:3128 -s https://ipwho.is | sed 's/,/\n/g' | grep -E '"ip"|"country"|"region"|"city"|"latitude"|"longitude"|"org"|"connection"'
+    ```
+
 ## Troubleshooting
 
 - Check the logs for the AmneziaWG client and Squid:
     ```sh
-    docker logs awg-client
+    docker logs amneziawg
     docker logs squid
     ```
 
-  Use the `-f` flag to monitor logs in real-time: `docker logs -f awg-client`
+  Use the `-f` flag to monitor logs in real-time: `docker logs -f amneziawg`
 
 - Check VPN connection status:
     ```sh
-    docker exec -it awg-client awg show
+    docker exec -it amneziawg awg show
     ```
 
 - Check VPN interface details:
     ```sh
-    docker exec -it awg-client awg show awg0
+    docker exec -it amneziawg awg show awg0
     ```
 
 - Verify DNS resolution inside the VPN container:
     ```sh
-    docker exec -it awg-client ping ifconfig.co
+    docker exec -it amneziawg curl -4 http://ifconfig.co
     ```
 
 - Check container health status:
@@ -73,6 +86,11 @@ The architecture uses two Docker containers:
 To stop the services, run:
 ```sh
 docker compose down
+```
+
+Or via the compatibility wrapper:
+```sh
+make down
 ```
 
 ## Additional Resources
