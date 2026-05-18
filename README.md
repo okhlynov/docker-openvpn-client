@@ -10,7 +10,9 @@ The architecture uses two Docker containers:
 ## Prerequisites
 - Docker
 - Docker Compose
+
 - An AmneziaWG configuration file at `$project_root/local/wg_confs/awg0.conf`
+
 
 ## Setup
 
@@ -18,6 +20,7 @@ The architecture uses two Docker containers:
     ```sh
     git submodule update --init --recursive
     ```
+
 
 2. Place your AmneziaWG configuration file as `awg0.conf` in the `$project_root/local/wg_confs` directory.
 
@@ -29,6 +32,14 @@ The architecture uses two Docker containers:
     docker compose up -d
     ```
 
+4. (Optional) Use the Makefile wrapper for Docker Compose compatibility fallback:
+    ```sh
+    make build
+    make up
+    ```
+   The wrapper first tries `docker compose` and automatically falls back to `docker-compose` if your local plugin path fails (for example with `unknown flag: --allow`).
+
+
 ## Usage
 
 1. Set your proxy settings to `http://localhost:3128`.
@@ -36,6 +47,11 @@ The architecture uses two Docker containers:
 2. Verify the proxy is working:
     ```sh
     curl --proxy http://localhost:3128 http://ifconfig.co
+    ```
+
+3. Verify proxy egress geolocation (country/city/ASN):
+    ```sh
+    curl --proxy http://localhost:3128 -s https://ipwho.is | sed 's/,/\n/g' | grep -E '"ip"|"country"|"region"|"city"|"latitude"|"longitude"|"org"|"connection"'
     ```
 
 ## Troubleshooting
@@ -60,7 +76,7 @@ The architecture uses two Docker containers:
 
 - Verify DNS resolution inside the VPN container:
     ```sh
-    docker exec -it amneziawg ping ifconfig.co
+    docker exec -it amneziawg curl -4 http://ifconfig.co
     ```
 
 - Check container health status:
@@ -73,6 +89,11 @@ The architecture uses two Docker containers:
 To stop the services, run:
 ```sh
 docker compose down
+```
+
+Or via the compatibility wrapper:
+```sh
+make down
 ```
 
 ## Additional Resources
