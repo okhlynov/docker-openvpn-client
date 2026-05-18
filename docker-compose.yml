@@ -13,27 +13,24 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.src_valid_mark=1
-      - net.ipv6.conf.all.disable_ipv6=0
+      - net.ipv6.conf.all.disable_ipv6=1
+      - net.ipv6.conf.default.disable_ipv6=1
+    environment:
+      - USE_COREDNS=false
     volumes:
-      # Mount your local WireGuard configuration file
-      - ./local/awg0.conf:/etc/wireguard/awg0.conf
+      - ./local:/config
     ports:
       - "3128:3128"
     dns:
-      - 8.8.8.8
       - 1.1.1.1
+      - 8.8.8.8
     restart: unless-stopped
-    # Health check configuration
     healthcheck:
-      test: ["CMD", "awg", "show"]
+      test: ["CMD-SHELL", "curl -4 -sS --max-time 8 http://ifconfig.co >/dev/null || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 10s
-    # The command to run inside the container, specifying the interface name
-    command: awg0
-    networks:
-      - shared-network
+      start_period: 20s
 
   squid:
     image: squid:1.0
@@ -43,8 +40,3 @@ services:
       dockerfile: Dockerfile
       context: squid-build
     restart: unless-stopped
-
-networks:
-  shared-network:
-    name: shared-network
-    
