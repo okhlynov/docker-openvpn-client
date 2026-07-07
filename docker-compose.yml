@@ -13,6 +13,8 @@ services:
     sysctls:
       - net.ipv4.ip_forward=1
       - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv4.conf.default.rp_filter=2
+      - net.ipv4.conf.all.rp_filter=2
       - net.ipv6.conf.all.disable_ipv6=1
       - net.ipv6.conf.default.disable_ipv6=1
     environment:
@@ -38,7 +40,7 @@ services:
     network_mode: service:awg-client
     depends_on:
       awg-client:
-        condition: service_healthy
+        condition: service_started
     build:
       dockerfile: Dockerfile
       context: squid-build
