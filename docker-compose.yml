@@ -30,7 +30,10 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 20s
+      start_period: 10s
+    networks:
+      - shared-network
+
 
   squid:
     image: squid:1.0

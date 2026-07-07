@@ -12,7 +12,9 @@ Squid is reachable from the Docker host at `http://127.0.0.1:3128`. The port is 
 ## Prerequisites
 - Docker
 - Docker Compose
-- An AmneziaWG configuration directory in `$project_root/local`, with config at `$project_root/local/wg_confs/awg0.conf`
+
+- An AmneziaWG configuration file at `$project_root/local/wg_confs/awg0.conf`
+
 
 ## Setup
 
@@ -21,7 +23,8 @@ Squid is reachable from the Docker host at `http://127.0.0.1:3128`. The port is 
     git submodule update --init --recursive
     ```
 
-2. Place your AmneziaWG configuration file as `$project_root/local/wg_confs/awg0.conf`.
+
+2. Place your AmneziaWG configuration file as `awg0.conf` in the `$project_root/local/wg_confs` directory.
 
    For detailed information about AmneziaWG configuration and obfuscation parameters, see the [AmneziaWG submodule documentation](./docker-amneziawg/README.md).
 
