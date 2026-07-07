@@ -20,13 +20,13 @@ services:
     volumes:
       - ./local:/config
     ports:
-      - "3128:3128"
+      - "127.0.0.1:3128:3128"
     dns:
       - 1.1.1.1
       - 8.8.8.8
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "curl -4 -sS --max-time 8 http://ifconfig.co >/dev/null || exit 1"]
+      test: ["CMD-SHELL", "wget -q -T 8 -O /dev/null http://ifconfig.co || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -36,6 +36,9 @@ services:
     image: squid:1.0
     container_name: squid
     network_mode: service:awg-client
+    depends_on:
+      awg-client:
+        condition: service_started
     build:
       dockerfile: Dockerfile
       context: squid-build

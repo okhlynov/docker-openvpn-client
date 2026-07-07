@@ -7,6 +7,8 @@ The architecture uses two Docker containers:
 - **AmneziaWG client** (`amneziawg`) - Establishes the VPN tunnel
 - **Squid proxy** - Shares the VPN client's network namespace, routing all proxy traffic through the VPN
 
+Squid is reachable from the Docker host at `http://127.0.0.1:3128`. The port is intentionally bound to localhost only.
+
 ## Prerequisites
 - Docker
 - Docker Compose
@@ -36,50 +38,63 @@ The architecture uses two Docker containers:
     ```
    The wrapper first tries `docker compose` and automatically falls back to `docker-compose` if your local plugin path fails (for example with `unknown flag: --allow`).
 
-
 ## Usage
 
-1. Set your proxy settings to `http://localhost:3128`.
+1. Set your proxy settings to `http://127.0.0.1:3128`.
 
 2. Verify the proxy is working:
     ```sh
-    curl --proxy http://localhost:3128 http://ifconfig.co
+    curl --proxy http://127.0.0.1:3128 http://ifconfig.co
     ```
 
 3. Verify proxy egress geolocation (country/city/ASN):
     ```sh
-    curl --proxy http://localhost:3128 -s https://ipwho.is | sed 's/,/\n/g' | grep -E '"ip"|"country"|"region"|"city"|"latitude"|"longitude"|"org"|"connection"'
+    curl --proxy http://127.0.0.1:3128 -s https://ipwho.is | sed 's/,/\n/g' | grep -E '"ip"|"country"|"region"|"city"|"latitude"|"longitude"|"org"|"connection"'
     ```
 
 ## Troubleshooting
 
-- Check the logs for the AmneziaWG client and Squid:
-    ```sh
-    docker logs amneziawg
-    docker logs squid
-    ```
+Check container state and logs:
+```sh
+docker compose ps
+docker compose logs -f awg-client squid
+```
 
-  Use the `-f` flag to monitor logs in real-time: `docker logs -f amneziawg`
+Check VPN connection status:
+```sh
+docker exec -it amneziawg awg show
+docker exec -it amneziawg awg show awg0
+```
 
-- Check VPN connection status:
-    ```sh
-    docker exec -it amneziawg awg show
-    ```
+Check IPv4 egress inside the VPN network namespace:
+```sh
+docker exec -it amneziawg wget -4 -qO- http://ifconfig.co
+```
 
-- Check VPN interface details:
-    ```sh
-    docker exec -it amneziawg awg show awg0
-    ```
+If this command fails, the problem is below Squid: inspect the tunnel config, routes, policy rules, and DNS inside the `amneziawg` namespace:
+```sh
+docker exec -it amneziawg ip addr
+docker exec -it amneziawg ip route
+docker exec -it amneziawg ip rule
+docker exec -it amneziawg cat /etc/resolv.conf
+```
 
-- Verify DNS resolution inside the VPN container:
-    ```sh
-    docker exec -it amneziawg curl -4 http://ifconfig.co
-    ```
+Check whether Squid is listening inside the shared network namespace:
+```sh
+docker exec -it amneziawg ss -ltnp 'sport = :3128'
+```
 
-- Check container health status:
-    ```sh
-    docker compose ps
-    ```
+If Squid is listening and `wget` works inside `amneziawg`, but the host proxy call fails, inspect Docker port publishing:
+```sh
+docker port amneziawg 3128
+docker inspect amneziawg --format '{{json .NetworkSettings.Ports}}'
+curl -v --proxy http://127.0.0.1:3128 http://ifconfig.co
+```
+
+On Docker 29, also check the firewall backend if port publishing behaves differently from older hosts:
+```sh
+docker info --format '{{.FirewallBackend}}'
+```
 
 ## Stopping the Services
 
