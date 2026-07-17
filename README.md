@@ -1,80 +1,104 @@
-# Squid Proxy with AmneziaWG
+# HTTP and SOCKS5 Proxies with AmneziaWG
 
 ## Overview
-This project sets up a Squid proxy server that routes traffic through an AmneziaWG VPN client. AmneziaWG is a WireGuard-based VPN protocol with built-in obfuscation capabilities designed to bypass Deep Packet Inspection (DPI) and censorship while maintaining WireGuard's performance and security benefits.
 
-The architecture uses two Docker containers:
-- **AmneziaWG client** (`amneziawg`) - Establishes the VPN tunnel
-- **Squid proxy** - Shares the VPN client's network namespace, routing all proxy traffic through the VPN
+This project runs two local proxy servers whose traffic is routed through an AmneziaWG VPN client:
 
-Squid is reachable from the Docker host at `http://127.0.0.1:3128`. The port is intentionally bound to localhost only.
+- **AmneziaWG client** establishes the VPN tunnel.
+- **Squid** provides an HTTP proxy.
+- **Dante** provides a SOCKS5 proxy for TCP connections.
+
+Squid and Dante share the AmneziaWG client's network namespace, so their outbound traffic uses the VPN tunnel.
+
+Both proxies are intentionally published on localhost only:
+
+- HTTP: `http://127.0.0.1:3128`
+- SOCKS5: `socks5://127.0.0.1:1080`
+
+Dante starts only after the AmneziaWG healthcheck succeeds, because its configuration uses the `awg0` interface.
 
 ## Prerequisites
+
 - Docker
 - Docker Compose
-
 - An AmneziaWG configuration file at `$project_root/local/wg_confs/awg0.conf`
-
 
 ## Setup
 
-1. Initialize the git submodule (required for AmneziaWG client):
+1. Initialize the git submodule:
+
     ```sh
     git submodule update --init --recursive
     ```
 
+2. Place your AmneziaWG configuration file at `local/wg_confs/awg0.conf`.
 
-2. Place your AmneziaWG configuration file as `awg0.conf` in the `$project_root/local/wg_confs` directory.
-
-   For detailed information about AmneziaWG configuration and obfuscation parameters, see the [AmneziaWG submodule documentation](./docker-amneziawg/README.md).
+   See the [AmneziaWG submodule documentation](./docker-amneziawg/README.md) for tunnel configuration and obfuscation parameters.
 
 3. Build and start the services:
+
     ```sh
     docker compose build
     docker compose up -d
     ```
 
-4. (Optional) Use the Makefile wrapper for Docker Compose compatibility fallback:
+4. Optionally use the Makefile wrapper:
+
     ```sh
     make build
     make up
     ```
-   The wrapper first tries `docker compose` and automatically falls back to `docker-compose` if your local plugin path fails (for example with `unknown flag: --allow`).
+
+   The wrapper tries `docker compose` first and falls back to `docker-compose`.
 
 ## Usage
 
-1. Set your proxy settings to `http://127.0.0.1:3128`.
+Verify the HTTP proxy:
 
-2. Verify the proxy is working:
-    ```sh
-    curl --proxy http://127.0.0.1:3128 http://ifconfig.co
-    ```
+```sh
+curl --proxy http://127.0.0.1:3128 http://ifconfig.co
+```
 
-3. Verify proxy egress geolocation (country/city/ASN):
-    ```sh
-    curl --proxy http://127.0.0.1:3128 -s https://ipwho.is | sed 's/,/\n/g' | grep -E '"ip"|"country"|"region"|"city"|"latitude"|"longitude"|"org"|"connection"'
-    ```
+Verify the SOCKS5 proxy:
+
+```sh
+curl --proxy socks5h://127.0.0.1:1080 http://ifconfig.co
+```
+
+Use `socks5h` when the destination hostname should be resolved through the proxy. With `socks5`, curl resolves the hostname locally before connecting to the proxy.
+
+Verify proxy egress geolocation:
+
+```sh
+curl --proxy socks5h://127.0.0.1:1080 -s https://ipwho.is | sed 's/,/\n/g' | grep -E '"ip"|"country"|"region"|"city"|"latitude"|"longitude"|"org"|"connection"'
+```
+
+The initial Dante configuration supports unauthenticated TCP `CONNECT` requests. UDP forwarding is not enabled.
 
 ## Troubleshooting
 
 Check container state and logs:
+
 ```sh
 docker compose ps
-docker compose logs -f awg-client squid
+docker compose logs -f awg-client squid dante
 ```
 
-Check VPN connection status:
+Check the VPN connection:
+
 ```sh
 docker exec -it amneziawg awg show
 docker exec -it amneziawg awg show awg0
 ```
 
 Check IPv4 egress inside the VPN network namespace:
+
 ```sh
 docker exec -it amneziawg wget -4 -qO- http://ifconfig.co
 ```
 
-If this command fails, the problem is below Squid: inspect the tunnel config, routes, policy rules, and DNS inside the `amneziawg` namespace:
+If this fails, inspect the tunnel, routes, policy rules, and DNS:
+
 ```sh
 docker exec -it amneziawg ip addr
 docker exec -it amneziawg ip route
@@ -82,36 +106,39 @@ docker exec -it amneziawg ip rule
 docker exec -it amneziawg cat /etc/resolv.conf
 ```
 
-Check whether Squid is listening inside the shared network namespace:
+Check both proxy listeners in the shared network namespace:
+
 ```sh
-docker exec -it amneziawg ss -ltnp 'sport = :3128'
+docker exec -it amneziawg ss -ltnp '( sport = :3128 or sport = :1080 )'
 ```
 
-If Squid is listening and `wget` works inside `amneziawg`, but the host proxy call fails, inspect Docker port publishing:
+Check Docker port publishing:
+
 ```sh
-docker port amneziawg 3128
+docker port amneziawg
 docker inspect amneziawg --format '{{json .NetworkSettings.Ports}}'
-curl -v --proxy http://127.0.0.1:3128 http://ifconfig.co
 ```
 
-On Docker 29, also check the firewall backend if port publishing behaves differently from older hosts:
+On Docker 29, also check the firewall backend if published ports behave differently from older hosts:
+
 ```sh
 docker info --format '{{.FirewallBackend}}'
 ```
 
 ## Stopping the Services
 
-To stop the services, run:
 ```sh
 docker compose down
 ```
 
-Or via the compatibility wrapper:
+Or:
+
 ```sh
 make down
 ```
 
 ## Additional Resources
 
-- [AmneziaWG Docker Implementation](./docker-amneziawg/README.md) - Detailed documentation for the VPN client container
-- [AmneziaWG Protocol](https://github.com/amnezia-vpn/amnezia-client) - Official AmneziaWG project
+- [AmneziaWG Docker implementation](./docker-amneziawg/README.md)
+- [AmneziaWG protocol](https://github.com/amnezia-vpn/amnezia-client)
+- [Dante SOCKS server](https://www.inet.no/dante/)
