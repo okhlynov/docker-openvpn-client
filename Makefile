@@ -35,9 +35,9 @@ down:
 
 logs:
 	@if docker compose version >/dev/null 2>&1; then \
-		docker compose -f $(COMPOSE_FILE) logs -f awg-client squid; \
+		docker compose -f $(COMPOSE_FILE) logs -f awg-client squid dante; \
 	else \
-		docker-compose -f $(COMPOSE_FILE) logs -f awg-client squid; \
+		docker-compose -f $(COMPOSE_FILE) logs -f awg-client squid dante; \
 	fi
 
 ps:
