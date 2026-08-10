@@ -15,13 +15,13 @@ Both proxies are intentionally published on localhost only:
 - HTTP: `http://127.0.0.1:3128`
 - SOCKS5: `socks5://127.0.0.1:1080`
 
-Dante starts only after the AmneziaWG healthcheck succeeds, because its configuration uses the `awg0` interface.
+Dante starts only after the AmneziaWG healthcheck succeeds, because its configuration uses the `wg0` interface.
 
 ## Prerequisites
 
 - Docker
 - Docker Compose
-- An AmneziaWG configuration file at `$project_root/local/wg_confs/awg0.conf`
+- An AmneziaWG configuration file at `$project_root/local/wg_confs/wg0.conf`
 
 ## Setup
 
@@ -31,7 +31,9 @@ Dante starts only after the AmneziaWG healthcheck succeeds, because its configur
     git submodule update --init --recursive
     ```
 
-2. Place your AmneziaWG configuration file at `local/wg_confs/awg0.conf`.
+2. Place your AmneziaWG configuration file at `local/wg_confs/wg0.conf`.
+
+   The filename determines the VPN interface name. Keep it `wg0.conf` so that the Dante config's `external: wg0` keeps working.
 
    See the [AmneziaWG submodule documentation](./docker-amneziawg/README.md) for tunnel configuration and obfuscation parameters.
 
@@ -88,7 +90,7 @@ Check the VPN connection:
 
 ```sh
 docker exec -it amneziawg awg show
-docker exec -it amneziawg awg show awg0
+docker exec -it amneziawg awg show wg0
 ```
 
 Check IPv4 egress inside the VPN network namespace:
