@@ -21,6 +21,7 @@ services:
       - ./local:/config
     ports:
       - "127.0.0.1:3128:3128"
+      - "127.0.0.1:1080:1080"
     dns:
       - 1.1.1.1
       - 8.8.8.8
@@ -31,7 +32,6 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-
 
   squid:
     image: squid:1.0
@@ -44,3 +44,21 @@ services:
       dockerfile: Dockerfile
       context: squid-build
     restart: unless-stopped
+
+  dante:
+    image: dante:1.0
+    container_name: dante
+    network_mode: service:awg-client
+    depends_on:
+      awg-client:
+        condition: service_healthy
+    build:
+      dockerfile: Dockerfile
+      context: dante-build
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/127.0.0.1/1080'"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s

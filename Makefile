@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 COMPOSE_FILE ?= docker-compose.yml
 
-.PHONY: build up down logs ps
+.PHONY: build up down logs ps restart-dante
 
 build:
 	@if docker compose version >/dev/null 2>&1; then \
@@ -35,9 +35,9 @@ down:
 
 logs:
 	@if docker compose version >/dev/null 2>&1; then \
-		docker compose -f $(COMPOSE_FILE) logs -f awg-client squid; \
+		docker compose -f $(COMPOSE_FILE) logs -f awg-client squid dante; \
 	else \
-		docker-compose -f $(COMPOSE_FILE) logs -f awg-client squid; \
+		docker-compose -f $(COMPOSE_FILE) logs -f awg-client squid dante; \
 	fi
 
 ps:
@@ -45,4 +45,11 @@ ps:
 		docker compose -f $(COMPOSE_FILE) ps; \
 	else \
 		docker-compose -f $(COMPOSE_FILE) ps; \
+	fi
+
+restart-dante:
+	@if docker compose version >/dev/null 2>&1; then \
+		docker compose -f $(COMPOSE_FILE) restart dante; \
+	else \
+		docker-compose -f $(COMPOSE_FILE) restart dante; \
 	fi
